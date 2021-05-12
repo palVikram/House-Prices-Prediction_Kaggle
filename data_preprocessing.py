@@ -98,8 +98,6 @@ percentage_df=percentage_df.sort_values(by="null_percentage", ascending=False)
 
 
 
-
-
 ####################### correlation ########################################
 train_corr=train.corr()
 f, ax=plt.subplots(figsize=(25,25))
@@ -119,24 +117,28 @@ sns.set(font_scale=1.25)
 hm = sns.heatmap(cm, cbar=True, annot=True, square=True, fmt='.2f', annot_kws={'size': 10},cbar_kws= {"shrink": .5, 'orientation': 'vertical'}, yticklabels=cols.values,linewidths=.5, xticklabels=cols.values)
 plt.show()
 
+
+### we have selected k number of variables through highest correlation (refer line 115)
 train=train[cols]
 
+
+##### Removing outliers
+sns.scatterplot(train["GarageArea"],train["SalePrice"])
+garageArea_outliers=train["GarageArea"].sort_values(ascending=False)[:4]
+train = train.drop(train[train['GarageArea'] >1248].index)
+### after removing outliers 
 sns.scatterplot(train["GarageArea"],train["SalePrice"])
 
 
-
-garageArea_outliers=train["GarageArea"].sort_values(ascending=False)[:4]
-
-train = train.drop(train[train['GarageArea'] >1248].index)
-
-import time
-
-for col in cols:
-    print(col)
-    if col!="SalePrice":
-        sns.scatterplot(train[col],train["SalePrice"])
-        time.sleep(5)
-    
+### before removing outliers 
+sns.scatterplot(x=train.MasVnrArea,y=train.SalePrice)
+train = train.drop(train[train['MasVnrArea'] >1250].index)
+### after removing outliers 
+sns.scatterplot(x=train.MasVnrArea,y=train.SalePrice)
 
 
-sns.scatterplot(x=df_train.MasVnrArea,y=df_train.SalePrice)
+### before removing outliers 
+sns.scatterplot(x=train.TotRmsAbvGrd,y=train.SalePrice)
+train = train.drop(train[train['TotRmsAbvGrd'] >13].index)
+### after removing outliers 
+sns.scatterplot(x=train.TotRmsAbvGrd,y=train.SalePrice)

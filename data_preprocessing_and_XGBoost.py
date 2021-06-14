@@ -67,7 +67,7 @@ categorical_df=train.select_dtypes(exclude=numerics)
 
 
 ####  LotFrontage is ~18% empty. we can use mean or median value to fill the NaN values based on Neighborhood or corresponding unique element
-train_original["LotFrontage"]=train_original.groupby("Neighborhood").transform(lambda x:x.median())
+train_original["LotFrontage"]=train_original.groupby("Neighborhood").transform(lambda x:x.fillna(x.median()))
 
 train_original["LotFrontage"].isnull().sum()
 
@@ -121,11 +121,13 @@ plt.show()
 ### we have selected k number of variables through highest correlation (refer line 115)
 train=train[cols]
 
+train.columns
+
 
 ##### Removing outliers
 sns.scatterplot(train["GarageArea"],train["SalePrice"])
 garageArea_outliers=train["GarageArea"].sort_values(ascending=False)[:4]
-train = train.drop(train[train['GarageArea'] >1248].index)
+train = train.drop(train[train['GarageArea'] >1200].index)
 ### after removing outliers 
 sns.scatterplot(train["GarageArea"],train["SalePrice"])
 
@@ -142,3 +144,91 @@ sns.scatterplot(x=train.TotRmsAbvGrd,y=train.SalePrice)
 train = train.drop(train[train['TotRmsAbvGrd'] >13].index)
 ### after removing outliers 
 sns.scatterplot(x=train.TotRmsAbvGrd,y=train.SalePrice)
+
+
+
+### before removing outliers 
+sns.scatterplot(x=train.GrLivArea,y=train.SalePrice)
+train = train.drop(train[train['GrLivArea'] >4000].index)
+### after removing outliers 
+
+sns.scatterplot(x=train.GrLivArea,y=train.SalePrice)
+
+
+
+### before removing outliers 
+sns.scatterplot(x=train.GarageCars,y=train.SalePrice)
+train = train.drop(train[train['GarageCars'] >3].index)
+### after removing outliers 
+
+sns.scatterplot(x=train.GarageCars,y=train.SalePrice)
+
+
+### before removing outliers 
+sns.scatterplot(x=train.TotalBsmtSF,y=train.SalePrice)
+train = train.drop(train[train['TotalBsmtSF'] >3000].index)
+### after removing outliers 
+
+sns.scatterplot(x=train.TotalBsmtSF,y=train.SalePrice)
+
+
+### Normalize 
+
+sns.displot(train["GrLivArea"], stat="density")
+
+
+train["GrLivArea"]=np.log(train["GrLivArea"])
+
+
+sns.displot(train["GrLivArea"], stat="density")
+
+
+train.columns
+
+
+train['TotalSF'] = train['TotalBsmtSF']+train['1stFlrSF']
+
+
+from xgboost import XGBRegressor
+from lightgbm import LGBMRegressor
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import train_test_split
+
+from sklearn.metrics import mean_squared_error
+from sklearn import metrics
+
+
+y_train=train["SalePrice"]
+X_train=train.drop(['SalePrice'], axis=1, inplace=True)
+X_train, Model_X_test, y_train, Model_y_test = train(X_train, y_train, test_size=0.2, random_state=42)
+
+
+
+LinearReg = LinearRegression()
+LinearReg.fit(X_train, y_train)
+y_predict_train_linear=LinearReg.predict(X_train)
+y_predict_test_linear= LinearReg.predict(Model_X_test)
+
+print("Accuracy on Traing set   : ",LinearReg.score(X_train,y_train))
+print("Accuracy on Testing set  : ",LinearReg.score(Model_X_test,Model_y_test))
+print("__________________________________________")
+print("\t\tError Table")
+print('Mean Absolute Error      : ', metrics.mean_absolute_error(Model_y_test, y_predict_test_linear))
+print('Mean Squared Error       : ', metrics.mean_squared_error(Model_y_test, y_predict_test_linear))
+print('Root Mean Squared Error  : ', np.sqrt(metrics.mean_squared_error(Model_y_test, y_predict_test_linear)))
+print('R Squared Error          : ', metrics.r2_score(Model_y_test, y_predict_test_linear))
+
+
+plt.scatter(y_train, y_predict_train_linear,alpha=0.3)
+plt.xlabel('Real Values')
+plt.ylabel('Predicted Values')
+plt.title('Train Real vs Train Predicted')
+
+
+plt.scatter(Model_y_test, y_predict_test_linear,alpha=0.3)
+plt.xlabel('Real Values')
+plt.ylabel('Predicted Values')
+plt.title('Test Real vs Test Predicted')
+
+
